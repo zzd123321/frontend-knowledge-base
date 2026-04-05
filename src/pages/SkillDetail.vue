@@ -7,7 +7,7 @@ import { skills } from '../data/skills'
 
 const route = useRoute()
 const router = useRouter()
-const md = new MarkdownIt({
+const md: MarkdownIt = new MarkdownIt({
   html: false,
   linkify: true,
   typographer: true,
