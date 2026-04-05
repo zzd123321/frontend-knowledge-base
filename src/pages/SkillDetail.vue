@@ -7,15 +7,15 @@ import { skills } from '../data/skills'
 
 const route = useRoute()
 const router = useRouter()
-const md = new MarkdownIt({
+const md: MarkdownIt = new MarkdownIt({
   html: false,
   linkify: true,
   typographer: true,
-  highlight(code, lang) {
+  highlight(this: MarkdownIt, code: string, lang: string) {
     if (lang && hljs.getLanguage(lang)) {
       return `<pre class="hljs"><code>${hljs.highlight(code, { language: lang, ignoreIllegals: true }).value}</code></pre>`
     }
-    return `<pre class="hljs"><code>${md.utils.escapeHtml(code)}</code></pre>`
+    return `<pre class="hljs"><code>${this.utils.escapeHtml(code)}</code></pre>`
   },
 })
 
