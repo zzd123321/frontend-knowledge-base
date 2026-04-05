@@ -34,18 +34,23 @@ const knowledgeHtml = ref('')
 const interviewHtml = ref('')
 const hasContent = ref(false)
 
+const knowledgeModules = import.meta.glob('../skills/*/knowledge.md', { query: '?raw', import: 'default' })
+const interviewModules = import.meta.glob('../skills/*/interview.md', { query: '?raw', import: 'default' })
+
 async function loadContent(id: string) {
   knowledgeHtml.value = ''
   interviewHtml.value = ''
   hasContent.value = false
   try {
+    const kLoader = knowledgeModules[`../skills/${id}/knowledge.md`]
+    const iLoader = interviewModules[`../skills/${id}/interview.md`]
     const [k, i] = await Promise.all([
-      import(`../skills/${id}/knowledge.md?raw`).catch(() => null),
-      import(`../skills/${id}/interview.md?raw`).catch(() => null),
+      kLoader ? kLoader().catch(() => null) : Promise.resolve(null),
+      iLoader ? iLoader().catch(() => null) : Promise.resolve(null),
     ])
     if (k || i) {
-      knowledgeHtml.value = k ? md.render(k.default) : ''
-      interviewHtml.value = i ? md.render(i.default) : ''
+      knowledgeHtml.value = k ? md.render(k as string) : ''
+      interviewHtml.value = i ? md.render(i as string) : ''
       hasContent.value = true
     }
   } catch {
