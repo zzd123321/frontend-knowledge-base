@@ -285,3 +285,415 @@ HTML 实体用于在 HTML 中显示特殊字符，避免与标签语法冲突。
 ```
 
 **现代前端推荐渐进增强**，配合特性检测（`@supports`、`Modernizr`）实现。
+
+---
+
+## Q16. 如何实现页面的 SEO 优化？
+
+**答：**
+
+**HTML 层面的 SEO 优化：**
+
+1. **语义化标签**：使用 `<header>` `<nav>` `<main>` `<article>` 等
+2. **标题层级**：合理使用 `<h1>` 到 `<h6>`，每页只有一个 `<h1>`
+3. **meta 标签**：
+   ```html
+   <title>页面标题（50-60字符）</title>
+   <meta name="description" content="页面描述（150-160字符）" />
+   <meta name="keywords" content="关键词1, 关键词2" />
+   ```
+4. **图片优化**：所有图片必须有描述性 `alt` 属性
+5. **链接优化**：使用语义化的锚文本，避免"点击这里"
+6. **结构化数据**：使用 JSON-LD 格式的 Schema.org 标记
+   ```html
+   <script type="application/ld+json">
+   {
+     "@context": "https://schema.org",
+     "@type": "Article",
+     "headline": "文章标题",
+     "author": "作者名"
+   }
+   </script>
+   ```
+7. **URL 结构**：使用语义化 URL，避免动态参数过多
+8. **页面加载速度**：使用 `defer`/`async`，压缩资源，懒加载图片
+9. **移动端适配**：`<meta name="viewport">` 确保响应式设计
+10. **sitemap.xml** 和 **robots.txt**
+
+---
+
+## Q17. 什么是 Web Components？包含哪些技术？
+
+**答：**
+
+Web Components 是一套浏览器原生 API，用于创建可复用的自定义元素。
+
+**核心技术：**
+
+1. **Custom Elements（自定义元素）**
+   ```js
+   class MyButton extends HTMLElement {
+     connectedCallback() {
+       this.innerHTML = '<button>点击</button>'
+     }
+   }
+   customElements.define('my-button', MyButton)
+   ```
+   ```html
+   <my-button></my-button>
+   ```
+
+2. **Shadow DOM（影子 DOM）**
+   - 提供样式和 DOM 隔离
+   ```js
+   class MyCard extends HTMLElement {
+     constructor() {
+       super()
+       const shadow = this.attachShadow({ mode: 'open' })
+       shadow.innerHTML = `
+         <style>h3 { color: blue; }</style>
+         <h3>卡片标题</h3>
+       `
+     }
+   }
+   ```
+
+3. **HTML Templates（模板）**
+   - 使用 `<template>` 和 `<slot>` 定义可复用结构
+
+**优势：**
+- 原生支持，无需框架
+- 真正的封装和隔离
+- 可在任何框架中使用
+
+---
+
+## Q18. preload、prefetch、dns-prefetch 的区别？
+
+**答：**
+
+| 资源提示 | 时机 | 优先级 | 适用场景 |
+|---|---|---|---|
+| `dns-prefetch` | 提前解析 DNS | 低 | 第三方域名（CDN、API） |
+| `preconnect` | DNS + TCP + TLS | 中 | 即将使用的跨域资源 |
+| `preload` | 立即加载 | 高 | 当前页面必需资源（字体、关键 CSS） |
+| `prefetch` | 空闲时加载 | 最低 | 下一页可能用到的资源 |
+
+```html
+<!-- 提前解析 CDN 域名 -->
+<link rel="dns-prefetch" href="https://cdn.example.com" />
+
+<!-- 预连接到 API 服务器 -->
+<link rel="preconnect" href="https://api.example.com" />
+
+<!-- 预加载关键字体 -->
+<link rel="preload" href="font.woff2" as="font" type="font/woff2" crossorigin />
+
+<!-- 预获取下一页资源 -->
+<link rel="prefetch" href="next-page.js" />
+```
+
+**注意：** 过度使用 `preload` 会浪费带宽，只用于真正关键的资源。
+
+---
+
+## Q19. 如何防止 XSS 攻击？
+
+**答：**
+
+**XSS（跨站脚本攻击）** 是指攻击者在页面中注入恶意脚本。
+
+**防御措施：**
+
+1. **输入验证和过滤**
+   - 后端验证所有用户输入
+   - 过滤 `<script>` `<iframe>` 等危险标签
+
+2. **输出转义**
+   ```js
+   // 将用户输入转义后再插入 DOM
+   function escapeHtml(str) {
+     return str
+       .replace(/&/g, '&amp;')
+       .replace(/</g, '&lt;')
+       .replace(/>/g, '&gt;')
+       .replace(/"/g, '&quot;')
+       .replace(/'/g, '&#39;')
+   }
+   ```
+
+3. **使用 textContent 而非 innerHTML**
+   ```js
+   // 危险
+   element.innerHTML = userInput
+   
+   // 安全
+   element.textContent = userInput
+   ```
+
+4. **设置 CSP（内容安全策略）**
+   ```html
+   <meta http-equiv="Content-Security-Policy" 
+         content="default-src 'self'; script-src 'self'" />
+   ```
+
+5. **Cookie 设置 HttpOnly**
+   ```
+   Set-Cookie: token=xxx; HttpOnly; Secure; SameSite=Strict
+   ```
+
+6. **使用现代框架**（React、Vue 默认转义输出）
+
+---
+
+## Q20. 什么是 CORS？如何解决跨域问题？
+
+**答：**
+
+**CORS（跨域资源共享）** 是浏览器的安全机制，限制网页向不同源的服务器发起请求。
+
+**同源定义：** 协议、域名、端口完全相同
+
+**解决方案：**
+
+1. **后端设置 CORS 响应头**（推荐）
+   ```
+   Access-Control-Allow-Origin: https://example.com
+   Access-Control-Allow-Methods: GET, POST, PUT
+   Access-Control-Allow-Headers: Content-Type
+   Access-Control-Allow-Credentials: true
+   ```
+
+2. **JSONP**（仅支持 GET，已过时）
+   ```html
+   <script src="https://api.example.com/data?callback=handleData"></script>
+   ```
+
+3. **代理服务器**
+   - 开发环境：配置 Vite/Webpack 代理
+   - 生产环境：Nginx 反向代理
+
+4. **postMessage**（iframe 跨域通信）
+   ```js
+   // 发送方
+   iframe.contentWindow.postMessage('data', 'https://target.com')
+   
+   // 接收方
+   window.addEventListener('message', (e) => {
+     if (e.origin !== 'https://sender.com') return
+     console.log(e.data)
+   })
+   ```
+
+---
+
+## Q21. 如何实现图片懒加载？
+
+**答：**
+
+**方案一：Intersection Observer API（推荐）**
+
+```html
+<img data-src="image.jpg" alt="懒加载图片" class="lazy" />
+```
+
+```js
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const img = entry.target
+      img.src = img.dataset.src
+      img.classList.remove('lazy')
+      observer.unobserve(img)
+    }
+  })
+})
+
+document.querySelectorAll('img.lazy').forEach(img => {
+  observer.observe(img)
+})
+```
+
+**方案二：原生 loading 属性**
+
+```html
+<img src="image.jpg" loading="lazy" alt="原生懒加载" />
+```
+
+**方案三：监听 scroll 事件（性能较差，不推荐）**
+
+```js
+window.addEventListener('scroll', () => {
+  document.querySelectorAll('img.lazy').forEach(img => {
+    if (img.getBoundingClientRect().top < window.innerHeight) {
+      img.src = img.dataset.src
+    }
+  })
+})
+```
+
+---
+
+## Q22. 什么是 BFC（块级格式化上下文）？
+
+**答：**
+
+BFC 是 CSS 渲染的一个独立区域，内部元素的布局不会影响外部。
+
+**触发 BFC 的条件：**
+- 根元素 `<html>`
+- `float` 不为 `none`
+- `position` 为 `absolute` 或 `fixed`
+- `display` 为 `inline-block`、`flex`、`grid`、`table-cell`
+- `overflow` 不为 `visible`
+
+**BFC 的特性：**
+1. 内部盒子垂直排列
+2. 垂直方向的 margin 会发生折叠
+3. BFC 区域不会与浮动元素重叠
+4. 计算 BFC 高度时，浮动元素也参与计算（清除浮动）
+
+**应用场景：**
+
+```html
+<!-- 清除浮动 -->
+<div style="overflow: hidden;">
+  <div style="float: left;">浮动元素</div>
+</div>
+
+<!-- 防止 margin 折叠 -->
+<div style="overflow: hidden;">
+  <p style="margin: 20px;">段落</p>
+</div>
+
+<!-- 两栏布局 -->
+<div style="float: left; width: 200px;">侧边栏</div>
+<div style="overflow: hidden;">主内容（不会被浮动覆盖）</div>
+```
+
+---
+
+## Q23. 如何优化首屏加载速度？
+
+**答：**
+
+**HTML 层面：**
+1. **减少 DOM 深度**，避免过度嵌套
+2. **关键 CSS 内联**，非关键 CSS 异步加载
+3. **script 标签使用 defer/async**
+4. **预加载关键资源**：`<link rel="preload">`
+5. **DNS 预解析**：`<link rel="dns-prefetch">`
+
+**资源优化：**
+1. **图片优化**：WebP 格式、懒加载、响应式图片
+2. **代码分割**：按路由拆分 JS bundle
+3. **Tree Shaking**：移除未使用的代码
+4. **压缩资源**：Gzip/Brotli 压缩
+5. **CDN 加速**
+
+**渲染优化：**
+1. **骨架屏**：显示占位内容
+2. **SSR/SSG**：服务端渲染或静态生成
+3. **避免阻塞渲染**：移除 render-blocking 资源
+4. **减少重绘回流**
+
+**监控指标：**
+- **FCP（首次内容绘制）**：< 1.8s
+- **LCP（最大内容绘制）**：< 2.5s
+- **TTI（可交互时间）**：< 3.8s
+
+---
+
+## Q24. HTML5 的 drag and drop API 如何使用？
+
+**答：**
+
+```html
+<!-- 可拖拽元素 -->
+<div draggable="true" id="drag-item">拖我</div>
+
+<!-- 放置区域 -->
+<div id="drop-zone" style="width: 200px; height: 200px; border: 2px dashed #ccc;">
+  放置区域
+</div>
+
+<script>
+const dragItem = document.getElementById('drag-item')
+const dropZone = document.getElementById('drop-zone')
+
+// 拖拽开始
+dragItem.addEventListener('dragstart', (e) => {
+  e.dataTransfer.setData('text/plain', e.target.id)
+  e.dataTransfer.effectAllowed = 'move'
+})
+
+// 拖拽进入放置区
+dropZone.addEventListener('dragover', (e) => {
+  e.preventDefault() // 必须阻止默认行为才能触发 drop
+  e.dataTransfer.dropEffect = 'move'
+})
+
+// 放置
+dropZone.addEventListener('drop', (e) => {
+  e.preventDefault()
+  const id = e.dataTransfer.getData('text/plain')
+  const element = document.getElementById(id)
+  dropZone.appendChild(element)
+})
+</script>
+```
+
+**关键事件：**
+- `dragstart` — 开始拖拽
+- `drag` — 拖拽中
+- `dragenter` — 进入放置区
+- `dragover` — 在放置区上方（必须 `preventDefault`）
+- `drop` — 放置
+- `dragend` — 拖拽结束
+
+---
+
+## Q25. 如何实现页面打印样式优化？
+
+**答：**
+
+```html
+<!-- 打印专用样式表 -->
+<link rel="stylesheet" href="print.css" media="print" />
+```
+
+```css
+/* print.css */
+@media print {
+  /* 隐藏不需要打印的元素 */
+  header, nav, footer, .no-print {
+    display: none !important;
+  }
+  
+  /* 强制分页 */
+  .page-break {
+    page-break-after: always;
+  }
+  
+  /* 避免元素被截断 */
+  img, table, pre {
+    page-break-inside: avoid;
+  }
+  
+  /* 显示链接地址 */
+  a[href]:after {
+    content: " (" attr(href) ")";
+  }
+  
+  /* 黑白打印优化 */
+  * {
+    color: #000 !important;
+    background: #fff !important;
+  }
+}
+```
+
+**JavaScript 触发打印：**
+```js
+window.print()
+```
