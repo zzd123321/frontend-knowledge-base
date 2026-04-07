@@ -1,5 +1,35 @@
 # HTML 面试题
 
+## 目录
+
+- [Q1. DOCTYPE 的作用是什么？](#q1-doctype-的作用是什么)
+- [Q2. 什么是语义化 HTML？有什么好处？](#q2-什么是语义化-html有什么好处)
+- [Q3. src 和 href 的区别？](#q3-src-和-href-的区别)
+- [Q4. script 标签的 defer 和 async 有什么区别？](#q4-script-标签的-defer-和-async-有什么区别)
+- [Q5. 行内元素和块级元素的区别？](#q5-行内元素和块级元素的区别)
+- [Q6. cookie、localStorage、sessionStorage 的区别？](#q6-cookielocalstoragesessionstorage-的区别)
+- [Q7. 什么是重绘（Repaint）和回流（Reflow）？如何优化？](#q7-什么是重绘repaint和回流reflow如何优化)
+- [Q8. iframe 有哪些优缺点？](#q8-iframe-有哪些优缺点)
+- [Q9. 如何理解 HTML 的 data-* 自定义属性？](#q9-如何理解-html-的-data--自定义属性)
+- [Q10. head 标签中可以放哪些内容？](#q10-head-标签中可以放哪些内容)
+- [Q11. 什么是 HTML 实体（HTML Entities）？](#q11-什么是-html-实体html-entities)
+- [Q12. 如何优化页面的首屏加载性能（HTML 层面）？](#q12-如何优化页面的首屏加载性能html-层面)
+- [Q13. alt 属性的作用是什么？什么时候可以为空？](#q13-alt-属性的作用是什么什么时候可以为空)
+- [Q14. 表单的 GET 和 POST 提交方式有什么区别？](#q14-表单的-get-和-post-提交方式有什么区别)
+- [Q15. 什么是渐进增强和优雅降级？](#q15-什么是渐进增强和优雅降级)
+- [Q16. 如何实现页面的 SEO 优化？](#q16-如何实现页面的-seo-优化)
+- [Q17. 什么是 Web Components？包含哪些技术？](#q17-什么是-web-components包含哪些技术)
+- [Q18. preload、prefetch、dns-prefetch 的区别？](#q18-preloadprefetchdns-prefetch-的区别)
+- [Q19. 如何防止 XSS 攻击？](#q19-如何防止-xss-攻击)
+- [Q20. 什么是 CORS？如何解决跨域问题？](#q20-什么是-cors如何解决跨域问题)
+- [Q21. 如何实现图片懒加载？](#q21-如何实现图片懒加载)
+- [Q22. 什么是 BFC（块级格式化上下文）？](#q22-什么是-bfc块级格式化上下文)
+- [Q23. 如何优化首屏加载速度？](#q23-如何优化首屏加载速度)
+- [Q24. HTML5 的 drag and drop API 如何使用？](#q24-html5-的-drag-and-drop-api-如何使用)
+- [Q25. 如何实现页面打印样式优化？](#q25-如何实现页面打印样式优化)
+
+---
+
 ## Q1. DOCTYPE 的作用是什么？
 
 **答：**

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, nextTick } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import MarkdownIt from 'markdown-it'
 import hljs from 'highlight.js'
@@ -55,18 +55,14 @@ async function loadContent(id: string) {
       knowledgeHtml.value = k ? md.render(k as string) : ''
       interviewHtml.value = i ? md.render(i as string) : ''
       hasContent.value = true
-      // 内容加载后刷新目录
-      await nextTick()
-      tocSidebarRef.value?.refresh()
     }
   } catch {
     // 该技能暂无内容
   }
 }
 
-// Tab 切换时刷新目录（使用 nextTick 确保 DOM 已更新）
-watch(activeTab, async () => {
-  await nextTick()
+// Tab 切换时刷新目录
+watch(activeTab, () => {
   tocSidebarRef.value?.refresh()
 })
 
