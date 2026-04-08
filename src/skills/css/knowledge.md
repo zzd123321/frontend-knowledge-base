@@ -1,367 +1,494 @@
 # CSS 核心知识点
 
-## 1. CSS 选择器
-
-### 基础选择器
-
-| 选择器 | 示例 | 说明 |
-|--------|------|------|
-| 通配符 | `*` | 选择所有元素 |
-| 标签 | `div` | 选择所有 div 元素 |
-| 类 | `.class` | 选择所有 class="class" 的元素 |
-| ID | `#id` | 选择 id="id" 的元素 |
-| 属性 | `[type="text"]` | 选择 type 属性为 text 的元素 |
-
-### 组合选择器
-
-```css
-/* 后代选择器 */
-div p { color: red; }
-
-/* 子选择器 */
-div > p { color: blue; }
-
-/* 相邻兄弟选择器 */
-h1 + p { margin-top: 0; }
-
-/* 通用兄弟选择器 */
-h1 ~ p { color: gray; }
-
-/* 多类选择器 */
-.class1.class2 { font-weight: bold; }
-```
-
-### 伪类选择器
-
-```css
-/* 链接状态 */
-a:link { color: blue; }
-a:visited { color: purple; }
-a:hover { color: red; }
-a:active { color: orange; }
-
-/* 结构伪类 */
-li:first-child { font-weight: bold; }
-li:last-child { border-bottom: none; }
-li:nth-child(2n) { background: #f0f0f0; }  /* 偶数 */
-li:nth-child(odd) { background: white; }   /* 奇数 */
-li:nth-child(3n+1) { color: red; }         /* 1, 4, 7... */
-
-/* 表单伪类 */
-input:focus { border-color: blue; }
-input:disabled { opacity: 0.5; }
-input:checked + label { color: green; }
-input:valid { border-color: green; }
-input:invalid { border-color: red; }
-
-/* 其他伪类 */
-:not(.active) { opacity: 0.5; }
-:empty { display: none; }
-:root { --main-color: #333; }
-```
-
-### 伪元素选择器
-
-```css
-/* 首字母/首行 */
-p::first-letter { font-size: 2em; }
-p::first-line { font-weight: bold; }
-
-/* 前后插入内容 */
-.icon::before {
-  content: "→ ";
-  color: blue;
-}
-
-.external-link::after {
-  content: " ↗";
-}
-
-/* 选中文本样式 */
-::selection {
-  background: yellow;
-  color: black;
-}
-
-/* 占位符样式 */
-input::placeholder {
-  color: #999;
-  font-style: italic;
-}
-```
-
-### 选择器优先级
-
-**权重计算：**
-- 内联样式：1000
-- ID 选择器：100
-- 类/伪类/属性：10
-- 标签/伪元素：1
-
-```css
-/* 优先级：1 */
-p { color: red; }
-
-/* 优先级：10 */
-.text { color: blue; }
-
-/* 优先级：100 */
-#title { color: green; }
-
-/* 优先级：111 */
-#title p.text { color: purple; }
-
-/* 最高优先级 */
-p { color: orange !important; }
-```
+CSS 不只是“写样式的语法”，它本质上是在描述页面元素如何参与渲染、如何占据空间、如何与其他元素形成关系。学习 CSS 时，如果只记属性名，往往会觉得零散；如果从“文档流、盒模型、层叠、布局”这几个核心概念入手，会更容易建立整体理解。
 
 ---
 
-## 2. 盒模型
+## 1. CSS 到底在解决什么问题
 
-### 标准盒模型 vs IE 盒模型
+HTML 负责描述内容结构，CSS 负责描述内容如何展示。这里的“展示”不只是颜色和字体，还包括：
+
+- 元素在页面中的位置
+- 元素占据多大空间
+- 元素与元素之间如何对齐
+- 当空间不足时内容如何换行、截断或滚动
+- 不同状态下元素如何变化
+
+很多初学者把 CSS 理解为“给页面化妆”，这是不完整的。更准确地说，CSS 是浏览器排版和绘制规则的一套声明式语言。
+
+---
+
+## 2. 选择器与层叠
+
+### 2.1 选择器的作用
+
+选择器决定“这条样式要应用给谁”。写 CSS 的第一步，不是去想颜色，而是先想清楚该规则应该作用在哪一类元素上。
+
+常见选择器可以分成几类：
+
+| 类型 | 示例 | 含义 |
+|------|------|------|
+| 标签选择器 | `p` | 选择所有 `p` 元素 |
+| 类选择器 | `.card` | 选择类名为 `card` 的元素 |
+| ID 选择器 | `#app` | 选择 id 为 `app` 的元素 |
+| 属性选择器 | `[disabled]` | 选择带有某个属性的元素 |
+| 后代选择器 | `.article p` | 选择 `.article` 内部的所有 `p` |
+| 子代选择器 | `.list > li` | 只选择直接子元素 |
+| 伪类 | `a:hover` | 选择某种状态下的元素 |
+| 伪元素 | `p::before` | 选择元素的“虚拟部分” |
+
+### 2.2 好的选择器应该是什么样
+
+好的选择器通常有两个特点：
+
+- 指向清晰，别人一眼能看出它在控制什么
+- 耦合适中，不依赖太深的 DOM 结构
+
+例如下面这种写法虽然能工作，但维护性很差：
 
 ```css
-/* 标准盒模型（content-box） */
-.box {
-  box-sizing: content-box;  /* 默认值 */
-  width: 200px;             /* 仅内容宽度 */
-  padding: 20px;
-  border: 5px solid;
-  /* 实际占据宽度 = 200 + 20*2 + 5*2 = 250px */
+div ul li span {
+  color: red;
 }
+```
 
-/* IE 盒模型（border-box，推荐） */
+它的问题是结构耦合太重。只要中间层级改一下，样式就可能失效。实际项目中更推荐使用更语义化的类名：
+
+```css
+.menu-label {
+  color: red;
+}
+```
+
+### 2.3 层叠是什么
+
+“层叠”是 CSS 的名字来源之一。浏览器在计算最终样式时，会把多个来源的规则叠加起来，然后按优先级决定谁生效。
+
+影响最终结果的常见因素包括：
+
+- 来源：浏览器默认样式、作者样式、行内样式
+- 优先级：选择器权重谁更高
+- 顺序：权重相同时，后写的覆盖先写的
+- 继承：某些属性会从父元素传给子元素
+
+### 2.4 优先级如何理解
+
+可以先记住一个粗略规则：
+
+- 行内样式权重大
+- ID 大于类
+- 类大于标签
+- `!important` 会强行提升优先级，但应谨慎使用
+
+```css
+p { color: red; }        /* 标签 */
+.text { color: blue; }   /* 类 */
+#title { color: green; } /* ID */
+```
+
+如果同一个元素同时被这三条规则命中，那么最终通常是 `#title` 生效。
+
+需要注意的是，优先级不是学习 CSS 的重点，控制好样式结构才是重点。一个项目里如果经常靠更高优先级互相覆盖，通常说明样式组织已经失控。
+
+---
+
+## 3. 盒模型
+
+### 3.1 每个元素都是一个盒子
+
+浏览器不会直接把元素当成“文字”或“图片”处理，而是会把它们先转换为一个个盒子。每个盒子都由以下部分组成：
+
+- `content` 内容区
+- `padding` 内边距
+- `border` 边框
+- `margin` 外边距
+
+这就是盒模型。
+
+### 3.2 `content-box` 和 `border-box`
+
+默认情况下，`width` 描述的是内容区宽度，也就是 `content-box`。
+
+```css
+.box {
+  box-sizing: content-box;
+  width: 200px;
+  padding: 20px;
+  border: 5px solid #333;
+}
+```
+
+这时元素真实占据的宽度并不是 200px，而是：
+
+`200 + 20 * 2 + 5 * 2 = 250px`
+
+而 `border-box` 会把 `padding` 和 `border` 都算进设定宽度里：
+
+```css
 .box {
   box-sizing: border-box;
-  width: 200px;             /* 包含 padding 和 border */
+  width: 200px;
   padding: 20px;
-  border: 5px solid;
-  /* 实际占据宽度 = 200px */
-  /* 内容宽度 = 200 - 20*2 - 5*2 = 150px */
+  border: 5px solid #333;
 }
+```
 
-/* 全局设置 */
+这时元素整体宽度就是 200px，更符合大多数人的直觉。因此实际项目里通常会全局设置：
+
+```css
 *, *::before, *::after {
   box-sizing: border-box;
 }
 ```
 
-### margin 折叠
+### 3.3 `margin` 折叠
+
+垂直方向上，相邻块级元素的 `margin` 不一定会相加，而可能发生折叠，最终只保留较大的那个值。
+
+这也是很多人刚学 CSS 时会觉得“怎么和我想的不一样”的原因之一。
 
 ```css
-/* 垂直方向 margin 会折叠，取较大值 */
 .box1 { margin-bottom: 30px; }
 .box2 { margin-top: 20px; }
-/* 实际间距：30px（不是 50px） */
-
-/* 避免 margin 折叠的方法 */
-.parent {
-  overflow: hidden;        /* 触发 BFC */
-  /* 或 display: flex; */
-  /* 或 padding-top: 1px; */
-}
 ```
+
+这两者之间的最终垂直间距通常是 `30px`，不是 `50px`。
+
+避免折叠的常见方式：
+
+- 给父元素设置 `padding` 或 `border`
+- 让父元素形成 BFC
+- 使用 `flex` 或 `grid` 布局
 
 ---
 
-## 3. 布局
+## 4. 文档流、脱离文档流与 BFC
 
-### Flexbox 弹性布局
+### 4.1 文档流是什么
+
+文档流可以理解为浏览器默认的排版规则。块级元素从上到下排列，行内内容从左到右排列，空间不足时自动换行。
+
+如果不写复杂布局，页面大多数元素其实都在文档流里正常工作。
+
+### 4.2 脱离文档流
+
+某些元素会脱离正常文档流，比如：
+
+- 浮动元素 `float`
+- 绝对定位元素 `position: absolute`
+- 固定定位元素 `position: fixed`
+
+脱离文档流后，它们不再像普通块级元素那样占位，这会直接影响周围元素的布局。
+
+### 4.3 BFC 是什么
+
+BFC 全称是 Block Formatting Context，块级格式化上下文。可以把它理解为一个相对独立的布局区域，内部布局不会轻易影响外部。
+
+BFC 常见用途：
+
+- 清除浮动影响
+- 避免 `margin` 折叠
+- 阻止内容被浮动元素覆盖
+
+常见触发方式：
+
+- `overflow: hidden/auto`
+- `display: flow-root`
+- `display: flex`
+- `display: grid`
+
+现在如果只是想明确创建一个新的块级格式化上下文，`display: flow-root` 往往比 `overflow: hidden` 更语义化。
+
+---
+
+## 5. 布局系统
+
+### 5.1 为什么布局是 CSS 的核心
+
+很多人学 CSS 会先学颜色、边框、动画，但真正决定页面质量的通常是布局。布局决定的是：
+
+- 内容怎么排
+- 空白怎么分配
+- 窄屏和宽屏下如何变化
+
+### 5.2 Flex 适合一维布局
+
+Flex 适合处理“一行”或“一列”上的排列问题。它擅长的是沿着一个主轴分配空间。
+
+典型场景：
+
+- 导航栏
+- 按钮组
+- 卡片列表的一行排列
+- 左右两端对齐
 
 ```css
-.container {
+.toolbar {
   display: flex;
-  
-  /* 主轴方向 */
-  flex-direction: row;           /* row | row-reverse | column | column-reverse */
-  
-  /* 换行 */
-  flex-wrap: wrap;               /* nowrap | wrap | wrap-reverse */
-  
-  /* 主轴对齐 */
-  justify-content: space-between; /* flex-start | flex-end | center | space-between | space-around | space-evenly */
-  
-  /* 交叉轴对齐 */
-  align-items: center;           /* flex-start | flex-end | center | baseline | stretch */
-  
-  /* 多行对齐 */
-  align-content: flex-start;     /* flex-start | flex-end | center | space-between | space-around | stretch */
-  
-  /* 间距（现代浏览器） */
-  gap: 20px;
-}
-
-.item {
-  /* 放大比例 */
-  flex-grow: 1;
-  
-  /* 缩小比例 */
-  flex-shrink: 1;
-  
-  /* 基础大小 */
-  flex-basis: 200px;
-  
-  /* 简写 */
-  flex: 1 1 200px;  /* grow shrink basis */
-  
-  /* 单独对齐 */
-  align-self: flex-end;
-  
-  /* 排序 */
-  order: 2;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
 }
 ```
 
-### Grid 网格布局
+理解 Flex 时最关键的是这几个概念：
+
+- 主轴 `main axis`
+- 交叉轴 `cross axis`
+- 容器属性控制整体排列
+- 子项属性控制单个项目如何伸缩
+
+最常见的误区是把 `justify-content` 和 `align-items` 混淆。可以简单记成：
+
+- `justify-content` 管主轴
+- `align-items` 管交叉轴
+
+### 5.3 Grid 适合二维布局
+
+Grid 适合同时控制“行”和“列”。如果你已经知道页面是一个二维网格，那么 Grid 会比 Flex 更自然。
+
+典型场景：
+
+- 后台布局
+- 卡片瀑布式区域
+- 页面整体分栏
+- 表格式排版
 
 ```css
-.container {
+.layout {
   display: grid;
-  
-  /* 定义列 */
-  grid-template-columns: 200px 1fr 2fr;
-  /* 或使用 repeat */
-  grid-template-columns: repeat(3, 1fr);
-  /* 或自动填充 */
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  
-  /* 定义行 */
-  grid-template-rows: 100px auto 100px;
-  
-  /* 间距 */
-  gap: 20px;
-  /* 或分别设置 */
-  row-gap: 20px;
-  column-gap: 10px;
-  
-  /* 对齐 */
-  justify-items: center;    /* 水平对齐单元格内容 */
-  align-items: center;      /* 垂直对齐单元格内容 */
-  justify-content: center;  /* 水平对齐整个网格 */
-  align-content: center;    /* 垂直对齐整个网格 */
+  grid-template-columns: 240px 1fr;
+  gap: 24px;
 }
-
-.item {
-  /* 跨列 */
-  grid-column: 1 / 3;       /* 从第1列到第3列 */
-  /* 或 */
-  grid-column: span 2;      /* 跨2列 */
-  
-  /* 跨行 */
-  grid-row: 1 / 3;
-  
-  /* 简写 */
-  grid-area: 1 / 1 / 3 / 3; /* row-start / col-start / row-end / col-end */
-}
-
-/* 命名网格区域 */
-.container {
-  grid-template-areas:
-    "header header header"
-    "sidebar main main"
-    "footer footer footer";
-}
-
-.header { grid-area: header; }
-.sidebar { grid-area: sidebar; }
-.main { grid-area: main; }
-.footer { grid-area: footer; }
 ```
 
-### 定位
+如果说 Flex 是“内容推着布局走”，那么 Grid 更像是“先搭骨架，再把内容放进去”。
+
+### 5.4 Flex 和 Grid 不是互斥关系
+
+真实项目里，常见组合方式是：
+
+- 页面大结构用 Grid
+- 组件内部对齐用 Flex
+
+这往往比只依赖其中一种方案更清晰。
+
+### 5.5 定位适合补充，不适合主布局
+
+`position` 常用于局部控制，而不是整个页面的主布局手段。
+
+常见定位方式：
+
+- `static`：默认值
+- `relative`：相对自身原位置偏移
+- `absolute`：相对最近的已定位祖先定位
+- `fixed`：相对视口固定
+- `sticky`：滚动到阈值后吸附
 
 ```css
-/* 静态定位（默认） */
-.static {
-  position: static;
-}
-
-/* 相对定位：相对于自身原位置 */
-.relative {
-  position: relative;
-  top: 10px;
-  left: 20px;
-}
-
-/* 绝对定位：相对于最近的非 static 祖先 */
-.absolute {
+.badge {
   position: absolute;
-  top: 0;
-  right: 0;
-}
-
-/* 固定定位：相对于视口 */
-.fixed {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-}
-
-/* 粘性定位：滚动到阈值时固定 */
-.sticky {
-  position: sticky;
-  top: 0;
-  z-index: 100;
+  top: 8px;
+  right: 8px;
 }
 ```
+
+常见错误是用大量 `absolute` 生拉硬拽做整个页面布局，这样一旦内容变多、字体变化、屏幕变窄，页面就容易崩掉。
 
 ---
 
-## 4. 响应式设计
+## 6. 响应式设计
 
-### 媒体查询
+### 6.1 响应式不是只写媒体查询
+
+响应式的目标是让界面在不同设备和不同空间下都保持可用。媒体查询只是手段之一，不是全部。
+
+响应式设计通常包含几个层面：
+
+- 流式宽度
+- 合理断点
+- 可缩放字体与间距
+- 布局在小屏下重新组织
+- 图片和媒体自适应
+
+### 6.2 移动优先
+
+移动优先的意思不是“先做手机页面”，而是先保证最小空间下的信息组织清楚，再逐步增强到更大屏幕。
 
 ```css
-/* 移动优先 */
 .container {
-  width: 100%;
+  padding: 16px;
 }
 
-/* 平板 */
 @media (min-width: 768px) {
   .container {
-    width: 750px;
+    padding: 24px;
   }
 }
+```
 
-/* 桌面 */
-@media (min-width: 1024px) {
-  .container {
-    width: 1000px;
-  }
+这样写通常比“桌面优先再不断打补丁”更稳定。
+
+### 6.3 常见响应式单位
+
+- `px`：固定尺寸，适合边框等精确场景
+- `%`：相对父元素
+- `em`：相对当前元素字体大小
+- `rem`：相对根元素字体大小
+- `vw` / `vh`：相对视口
+- `dvh`：更适合移动端动态视口
+
+实际项目里最常见的组合通常是：
+
+- 字体、间距用 `rem`
+- 容器宽度用 `%`、`max-width`
+- 特殊大标题或全屏模块才考虑 `vw`、`vh`
+
+### 6.4 容器查询的意义
+
+过去响应式通常只看视口宽度，但组件真正受到影响的往往是“它自己能分到多大空间”。容器查询就是为了解决这个问题。
+
+```css
+.card-list {
+  container-type: inline-size;
 }
 
-/* 大屏 */
-@media (min-width: 1440px) {
-  .container {
-    width: 1200px;
+@container (min-width: 500px) {
+  .card {
+    display: flex;
   }
 }
+```
 
-/* 横屏 */
-@media (orientation: landscape) {
-  .sidebar {
-    display: block;
-  }
+它更适合组件化开发，因为组件可以根据自己的容器变化，而不是依赖整个页面宽度。
+
+---
+
+## 7. 字体、文本与可读性
+
+CSS 不只是把文字“放出来”，还决定文字是否好读。实际项目中，文本样式的重点不是花哨，而是阅读体验。
+
+常见影响阅读体验的因素：
+
+- 字体族是否合适
+- 字号是否太小或太大
+- 行高是否足够
+- 字重是否过多
+- 一行文字是否太长
+- 段落间距是否清楚
+
+一个比“会写属性”更重要的认识是：文本样式首先服务于信息传达。
+
+```css
+.article {
+  font-size: 16px;
+  line-height: 1.75;
+  color: #374151;
 }
+```
 
-/* 打印 */
-@media print {
-  .no-print {
-    display: none;
-  }
+### 7.1 多行省略的本质
+
+多行省略不是一个非常“标准且统一”的老方案，它在很多时候依赖浏览器私有实现，因此要知道它是一个工程手段，而不是纯理论上的完美能力。
+
+```css
+.summary {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
+```
 
-/* 暗黑模式 */
-@media (prefers-color-scheme: dark) {
-  body {
-    background: #1a1a1a;
-    color: #fff;
-  }
+### 7.2 Web 字体要关注性能
+
+使用自定义字体时，不只是“能显示出来”就够了，还要考虑：
+
+- 字体文件是否过大
+- 是否会导致首屏闪烁
+- 是否需要子集化
+
+`font-display: swap` 很常见，因为它允许先用系统字体显示，再替换成目标字体，从而减少白屏式等待。
+
+---
+
+## 8. 颜色、背景与视觉表达
+
+颜色系统最好是成套管理，而不是想到哪写到哪。随着页面变大，零散的颜色值会很快失控。
+
+推荐把颜色拆成几类来理解：
+
+- 品牌色
+- 功能色，如成功、警告、错误
+- 中性色，如文字、边框、背景
+
+现代 CSS 常见写法：
+
+```css
+.button {
+  background: rgb(37 99 235);
+  color: white;
 }
+```
 
-/* 减少动画（无障碍） */
+### 8.1 渐变的使用原则
+
+渐变可以增强层次感，但不应该掩盖信息本身。好的渐变通常起的是辅助作用：
+
+- 区分区域
+- 增强品牌感
+- 提供更柔和的背景过渡
+
+而不是为了“炫”而让文本可读性下降。
+
+---
+
+## 9. 变换、过渡与动画
+
+### 9.1 `transform` 改变的是绘制结果
+
+`transform` 不会像普通布局属性那样重新参与文档流排版，它更像是对元素最终绘制结果做位移、旋转、缩放。
+
+```css
+.card:hover {
+  transform: translateY(-4px);
+}
+```
+
+这也是为什么很多动画场景更推荐用 `transform`，因为它通常比直接改 `top`、`left` 更顺畅。
+
+### 9.2 `transition` 适合状态变化
+
+过渡适合“从一种状态平滑变成另一种状态”，例如：
+
+- hover
+- focus
+- active
+- 展开与收起
+
+```css
+.button {
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+```
+
+### 9.3 `animation` 适合明确编排
+
+如果变化不是“状态切换”，而是有一段完整的时间过程，就更适合用 `@keyframes`。
+
+例如：
+
+- 加载动效
+- 页面进入动效
+- 无限循环的提示动画
+
+但动画不是越多越好。动画最常见的问题不是“不会写”，而是“写多了影响体验”。
+
+### 9.4 动画要考虑无障碍
+
+对于部分用户，过多移动和缩放会带来不适，因此应该兼顾系统偏好：
+
+```css
 @media (prefers-reduced-motion: reduce) {
   * {
     animation: none !important;
@@ -370,592 +497,136 @@ p { color: orange !important; }
 }
 ```
 
-### 响应式单位
-
-```css
-/* 相对单位 */
-.box {
-  /* 相对于父元素字体大小 */
-  width: 20em;
-  
-  /* 相对于根元素字体大小 */
-  padding: 2rem;
-  
-  /* 相对于视口宽度 */
-  font-size: 5vw;
-  
-  /* 相对于视口高度 */
-  height: 50vh;
-  
-  /* 视口最小值 */
-  width: 50vmin;
-  
-  /* 视口最大值 */
-  height: 50vmax;
-  
-  /* 百分比 */
-  width: 50%;
-}
-
-/* 现代单位 */
-.container {
-  /* 容器查询单位 */
-  width: 50cqw;
-  
-  /* 动态视口单位（考虑移动端地址栏） */
-  height: 100dvh;
-}
-```
-
-### 容器查询
-
-```css
-.card-container {
-  container-type: inline-size;
-  container-name: card;
-}
-
-@container card (min-width: 400px) {
-  .card {
-    display: flex;
-  }
-}
-```
-
 ---
 
-## 5. 颜色与渐变
+## 10. CSS 变量与设计令牌
 
-### 颜色表示
-
-```css
-.element {
-  /* 关键字 */
-  color: red;
-  
-  /* 十六进制 */
-  color: #ff0000;
-  color: #f00;  /* 简写 */
-  
-  /* RGB */
-  color: rgb(255, 0, 0);
-  color: rgba(255, 0, 0, 0.5);  /* 带透明度 */
-  
-  /* HSL（色相、饱和度、亮度） */
-  color: hsl(0, 100%, 50%);
-  color: hsla(0, 100%, 50%, 0.5);
-  
-  /* 现代语法 */
-  color: rgb(255 0 0 / 0.5);
-  color: hsl(0deg 100% 50% / 0.5);
-}
-```
-
-### 渐变
-
-```css
-/* 线性渐变 */
-.linear {
-  background: linear-gradient(to right, red, blue);
-  background: linear-gradient(45deg, red, yellow, green);
-  background: linear-gradient(to bottom, red 0%, yellow 50%, green 100%);
-}
-
-/* 径向渐变 */
-.radial {
-  background: radial-gradient(circle, red, blue);
-  background: radial-gradient(ellipse at center, red, blue);
-}
-
-/* 锥形渐变 */
-.conic {
-  background: conic-gradient(red, yellow, green, blue, red);
-}
-
-/* 重复渐变 */
-.repeating {
-  background: repeating-linear-gradient(
-    45deg,
-    red 0px,
-    red 10px,
-    blue 10px,
-    blue 20px
-  );
-}
-```
-
----
-
-## 6. 文本与字体
-
-```css
-.text {
-  /* 字体族 */
-  font-family: "Helvetica Neue", Arial, sans-serif;
-  
-  /* 字体大小 */
-  font-size: 16px;
-  
-  /* 字重 */
-  font-weight: 700;  /* 100-900 或 normal/bold */
-  
-  /* 字体样式 */
-  font-style: italic;
-  
-  /* 行高 */
-  line-height: 1.5;
-  
-  /* 字间距 */
-  letter-spacing: 0.05em;
-  
-  /* 词间距 */
-  word-spacing: 0.1em;
-  
-  /* 文本对齐 */
-  text-align: center;  /* left | right | center | justify */
-  
-  /* 文本装饰 */
-  text-decoration: underline;
-  text-decoration: line-through;
-  
-  /* 文本转换 */
-  text-transform: uppercase;  /* lowercase | capitalize */
-  
-  /* 文本缩进 */
-  text-indent: 2em;
-  
-  /* 文本阴影 */
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-  
-  /* 溢出处理 */
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  
-  /* 多行省略 */
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-/* Web 字体 */
-@font-face {
-  font-family: 'CustomFont';
-  src: url('font.woff2') format('woff2'),
-       url('font.woff') format('woff');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;  /* 字体加载策略 */
-}
-```
-
----
-
-## 7. 变换与动画
-
-### Transform 变换
-
-```css
-.transform {
-  /* 平移 */
-  transform: translate(50px, 100px);
-  transform: translateX(50px);
-  transform: translateY(100px);
-  
-  /* 缩放 */
-  transform: scale(1.5);
-  transform: scale(2, 0.5);  /* x, y */
-  
-  /* 旋转 */
-  transform: rotate(45deg);
-  
-  /* 倾斜 */
-  transform: skew(10deg, 20deg);
-  
-  /* 组合变换 */
-  transform: translate(50px, 100px) rotate(45deg) scale(1.2);
-  
-  /* 3D 变换 */
-  transform: rotateX(45deg);
-  transform: rotateY(45deg);
-  transform: translateZ(100px);
-  transform: perspective(500px) rotateY(45deg);
-}
-
-/* 变换原点 */
-.box {
-  transform-origin: center center;  /* 默认 */
-  transform-origin: top left;
-  transform-origin: 50% 50%;
-}
-```
-
-### Transition 过渡
-
-```css
-.button {
-  background: blue;
-  transition: background 0.3s ease;
-}
-
-.button:hover {
-  background: red;
-}
-
-/* 完整语法 */
-.box {
-  transition-property: all;
-  transition-duration: 0.3s;
-  transition-timing-function: ease-in-out;
-  transition-delay: 0.1s;
-  
-  /* 简写 */
-  transition: all 0.3s ease-in-out 0.1s;
-  
-  /* 多个属性 */
-  transition: 
-    background 0.3s ease,
-    transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-}
-
-/* 缓动函数 */
-.timing {
-  transition-timing-function: ease;        /* 默认 */
-  transition-timing-function: linear;
-  transition-timing-function: ease-in;
-  transition-timing-function: ease-out;
-  transition-timing-function: ease-in-out;
-  transition-timing-function: cubic-bezier(0.42, 0, 0.58, 1);
-}
-```
-
-### Animation 动画
-
-```css
-/* 定义关键帧 */
-@keyframes slideIn {
-  from {
-    transform: translateX(-100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-/* 或使用百分比 */
-@keyframes bounce {
-  0% { transform: translateY(0); }
-  50% { transform: translateY(-20px); }
-  100% { transform: translateY(0); }
-}
-
-/* 应用动画 */
-.animated {
-  animation-name: slideIn;
-  animation-duration: 1s;
-  animation-timing-function: ease-out;
-  animation-delay: 0.5s;
-  animation-iteration-count: infinite;  /* 或具体次数 */
-  animation-direction: alternate;       /* normal | reverse | alternate | alternate-reverse */
-  animation-fill-mode: forwards;        /* none | forwards | backwards | both */
-  animation-play-state: running;        /* running | paused */
-  
-  /* 简写 */
-  animation: slideIn 1s ease-out 0.5s infinite alternate forwards;
-}
-
-/* 多个动画 */
-.multi {
-  animation: 
-    slideIn 1s ease-out,
-    fadeIn 0.5s ease-in;
-}
-```
-
----
-
-## 8. CSS 变量
+CSS 变量的价值不只是“少写重复代码”，更重要的是它让样式具备了统一配置能力。
 
 ```css
 :root {
-  /* 定义全局变量 */
-  --primary-color: #3498db;
-  --secondary-color: #2ecc71;
-  --font-size-base: 16px;
-  --spacing-unit: 8px;
-}
-
-.component {
-  /* 使用变量 */
-  color: var(--primary-color);
-  font-size: var(--font-size-base);
-  padding: calc(var(--spacing-unit) * 2);
-  
-  /* 带默认值 */
-  background: var(--bg-color, #fff);
-}
-
-/* 局部变量 */
-.dark-theme {
-  --primary-color: #2980b9;
-  --bg-color: #1a1a1a;
-}
-
-/* JavaScript 操作 */
-/* document.documentElement.style.setProperty('--primary-color', '#e74c3c'); */
-```
-
----
-
-## 9. 现代 CSS 特性
-
-### Clamp 函数
-
-```css
-.responsive-text {
-  /* 最小值、首选值、最大值 */
-  font-size: clamp(1rem, 2.5vw, 2rem);
-  width: clamp(300px, 50%, 800px);
+  --color-primary: #2563eb;
+  --color-text: #111827;
+  --space-md: 16px;
+  --radius-md: 12px;
 }
 ```
 
-### Min/Max 函数
+使用变量后，你可以更容易做到：
 
-```css
-.box {
-  width: min(90%, 1200px);  /* 取较小值 */
-  height: max(300px, 50vh); /* 取较大值 */
-}
-```
-
-### Aspect Ratio
-
-```css
-.video {
-  aspect-ratio: 16 / 9;
-  width: 100%;
-}
-
-.square {
-  aspect-ratio: 1;
-}
-```
-
-### Logical Properties
-
-```css
-/* 传统方式 */
-.box {
-  margin-left: 20px;
-  padding-right: 10px;
-}
-
-/* 逻辑属性（支持 RTL） */
-.box {
-  margin-inline-start: 20px;
-  padding-inline-end: 10px;
-  padding-block: 10px 20px;  /* 上下 */
-  padding-inline: 10px 20px; /* 左右 */
-}
-```
-
-### Scroll Snap
-
-```css
-.container {
-  scroll-snap-type: x mandatory;
-  overflow-x: scroll;
-}
-
-.item {
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
-}
-```
-
-### Backdrop Filter
-
-```css
-.glass {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
-}
-```
-
----
-
-## 10. 性能优化
-
-### Will-Change
-
-```css
-.animated {
-  /* 提前告知浏览器将要变化的属性 */
-  will-change: transform, opacity;
-}
-
-/* 动画结束后移除 */
-.animated.done {
-  will-change: auto;
-}
-```
-
-### Contain
+- 主题切换
+- 深浅色模式
+- 统一间距系统
+- 统一圆角和阴影体系
 
 ```css
 .card {
-  /* 限制布局/样式/绘制的影响范围 */
-  contain: layout style paint;
-  /* 或 */
-  contain: strict;
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
 }
 ```
 
-### Content-Visibility
+如果一个项目已经有设计系统，那么 CSS 变量通常就是设计令牌落地到代码层的一种方式。
+
+---
+
+## 11. 层叠上下文与 `z-index`
+
+很多人以为 `z-index` 越大就一定在最上层，实际上不是。`z-index` 只有在特定上下文里才有意义，而层叠上下文一旦形成，内部元素就会在自己的“局部世界”里比较层级。
+
+常见触发层叠上下文的方式包括：
+
+- 已定位元素且 `z-index` 不为 `auto`
+- `opacity < 1`
+- `transform` 不为 `none`
+- `filter` 不为 `none`
+- `position: fixed` / `sticky`
+
+这就是为什么有时你把某个弹窗写成 `z-index: 9999`，它仍然盖不过别的元素。问题往往不在数值不够大，而在父级已经处于另一个层叠上下文里。
+
+解决这类问题时，先看层级关系，再改数值。
+
+---
+
+## 12. 常见性能问题
+
+CSS 也会影响性能，虽然它不一定像 JavaScript 那样显眼。
+
+### 12.1 尽量动画 `transform` 和 `opacity`
+
+如果频繁动画的是会触发布局和重绘的大属性，例如宽高、定位、阴影，性能开销通常更高。
+
+相对而言，`transform` 和 `opacity` 更适合作为高频动画属性。
+
+### 12.2 `will-change` 不能滥用
+
+`will-change` 是在提前告诉浏览器“这个属性可能要变”，浏览器可以做一些优化准备。但它不是万能加速按钮，滥用反而会增加内存开销。
 
 ```css
-.section {
-  /* 延迟渲染屏幕外内容 */
-  content-visibility: auto;
-  contain-intrinsic-size: 0 500px;
-}
-```
-
-### 硬件加速
-
-```css
-.accelerated {
-  /* 触发 GPU 加速 */
-  transform: translateZ(0);
-  /* 或 */
+.dragging {
   will-change: transform;
 }
 ```
 
----
+更合理的方式是只在短时间内、明确需要时使用。
 
-## 11. 常见布局模式
-
-### 圣杯布局
+### 12.3 大型页面可以考虑内容延迟渲染
 
 ```css
-.container {
-  display: flex;
-  min-height: 100vh;
-  flex-direction: column;
-}
-
-.header, .footer {
-  flex-shrink: 0;
-}
-
-.main {
-  display: flex;
-  flex: 1;
-}
-
-.sidebar {
-  width: 200px;
-}
-
-.content {
-  flex: 1;
+.section {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 600px;
 }
 ```
 
-### 水平垂直居中
-
-```css
-/* Flexbox */
-.center-flex {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-/* Grid */
-.center-grid {
-  display: grid;
-  place-items: center;
-}
-
-/* 绝对定位 + Transform */
-.center-absolute {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-}
-
-/* 绝对定位 + Margin */
-.center-margin {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  margin: auto;
-  width: 200px;
-  height: 100px;
-}
-```
-
-### 等高列
-
-```css
-/* Flexbox */
-.columns {
-  display: flex;
-}
-
-.column {
-  flex: 1;
-}
-
-/* Grid */
-.columns {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-}
-```
-
-### 粘性页脚
-
-```css
-body {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-}
-
-main {
-  flex: 1;
-}
-```
+这类能力适合超长内容页，但使用前要理解其行为，不要在关键交互区域盲目套用。
 
 ---
 
-## 12. 调试技巧
+## 13. 学 CSS 最容易卡住的点
 
-```css
-/* 显示所有元素边框 */
-* {
-  outline: 1px solid red;
-}
+### 13.1 只记属性，不理解空间关系
 
-/* 显示特定元素 */
-.debug {
-  background: rgba(255, 0, 0, 0.1);
-  border: 2px dashed red;
-}
+很多人会背很多属性，但一遇到复杂布局还是不会做，根本原因是没有理解：
 
-/* 检查层叠上下文 */
-.layer {
-  position: relative;
-  z-index: 1;
-  background: rgba(0, 0, 255, 0.1);
-}
-```
+- 元素是否在文档流中
+- 谁是父容器，谁是子项
+- 空间是如何分配的
+- 宽高是内容决定还是容器决定
+
+### 13.2 过度依赖“试出来”
+
+CSS 确实允许你不断试值，但如果总是靠“这个加一下，那个改一下”，最后会变成无法维护的样式堆。
+
+更好的方式是先判断：
+
+- 这是盒模型问题，还是布局问题
+- 这是优先级问题，还是继承问题
+- 这是文档流问题，还是定位问题
+
+### 13.3 把所有问题都交给 `z-index`
+
+很多遮挡问题并不是单纯的层级数值问题，而是布局、定位和层叠上下文共同作用的结果。只会提高 `z-index`，通常治标不治本。
+
+---
+
+## 14. 学习建议
+
+如果你想把 CSS 学扎实，建议按下面的顺序掌握：
+
+1. 选择器、继承、层叠、优先级
+2. 盒模型、文档流、BFC
+3. Flex、Grid、定位
+4. 响应式设计和常见单位
+5. 文本排版、颜色、组件细节
+6. 动画、层叠上下文、性能优化
+
+学习时不要只看代码是否“跑出来了”，更要问自己：
+
+- 这条样式为什么会生效
+- 这个元素为什么在这里占这么大空间
+- 如果父容器宽度变了，它会怎样变化
+- 如果内容多两倍，布局会不会崩
+
+当你开始用“渲染规则”的视角看 CSS，而不是只把它当作属性表，你的进步会快很多。
