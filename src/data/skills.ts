@@ -26,6 +26,14 @@ export const skills: Skill[] = [
     icon: '⚡',
   },
   {
+    id: 'ai',
+    title: 'AI',
+    description: '机器学习、深度学习、LLM、RAG、Agent 等 AI 核心知识',
+    level: 'intermediate',
+    tags: ['人工智能', 'LLM'],
+    icon: '🤖',
+  },
+  {
     id: 'typescript',
     title: 'TypeScript',
     description: 'JavaScript 的超集，提供静态类型检查',
